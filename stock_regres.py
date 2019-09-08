@@ -1,45 +1,73 @@
 import pandas as pd
 
+import matplotlib.pyplot as plt
+import numpy as np
+from sklearn import datasets, linear_model
+from sklearn.metrics import mean_squared_error, r2_score
+
+
+
+from sklearn.neighbors import KNeighborsRegressor
+
+from sklearn.linear_model import Ridge
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.pipeline import make_pipeline
+
+from sklearn.model_selection import train_test_split 
+from sklearn.linear_model import LinearRegression
+from sklearn import metrics
+
 date_parser = pd.to_datetime
 df = pd.read_csv("AAPL.csv", parse_dates=['Date'])
 print(df.head())
 
+X_key = 'Open'
+y_key = 'Adj Close'
+
+X = df[X_key].values.reshape(-1,1)
+y = df[y_key].values.reshape(-1,1)
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
 
 
-# Use only one feature
-df_X = df['Date']
-df_Y = df['Adj Close']
 
+# Linear regression
+clfreg = LinearRegression(n_jobs=-1)
+clfreg.fit(X_train, y_train)
 
-# Split the data into training/testing sets
-df_X_train = df_X[:-20]
-df_X_test = df_X[-20:]
-# Split the targets into training/testing sets
-df_y_train = df_Y[:-20]
-df_y_test = df_Y[-20:]
+print("\n***\nLinear")
+print(clfreg.intercept_)
+print(clfreg.coef_)
+y_pred1 = clfreg.predict(X_test)
+df_t = pd.DataFrame({'Actual': y_test.flatten(), 'Predicted': y_pred1.flatten()})
+print(df_t)
 
-# Create linear regression object
-regr = linear_model.LinearRegression()
+# Quadratic Regression 2
+clfpoly2 = make_pipeline(PolynomialFeatures(2), Ridge())
+clfpoly2.fit(X_train, y_train)
+ridge2 = clfpoly2.named_steps['ridge']
+print("\n***\nQuadratic 2")
 
-# Train the model using the training sets
-regr.fit(df_X_train, df_y_train)
+print(ridge2.coef_)
 
-# Make predictions using the testing set
-df_y_pred = regr.predict(df_X_test)
+# Quadratic Regression 3
+clfpoly3 = make_pipeline(PolynomialFeatures(3), Ridge())
+clfpoly3.fit(X_train, y_train)
+ridge3 = clfpoly2.named_steps['ridge']
+print("\n***\nQuadratic 3")
 
-# The coefficients
-print('Coefficients: \n', regr.coef_)
-# The mean squared error
-print("Mean squared error: %.2f"
-      % mean_squared_error(df_y_test, df_y_pred))
-# Explained variance score: 1 is perfect prediction
-print('Variance score: %.2f' % r2_score(df_y_test, df_y_pred))
+print(ridge3.coef_)
 
-# Plot outputs
-plt.scatter(df_X_test, df_y_test,  color='black')
-plt.plot(df_X_test, df_y_pred, color='blue', linewidth=3)
+# y_pred1 = clfreg.predict(X_test)
+# df_t = pd.DataFrame({'Actual': y_test.flatten(), 'Predicted': y_pred1.flatten()})
+# print(df_t)
 
-plt.xticks(())
-plt.yticks(())
+# df.plot(x=X_key, y=y_key, style='o')  
+# plt.title(X_key + 'vs' + y_key)  
+# plt.xlabel(X_key)  
+# plt.ylabel(y_key)  
+# plt.show()
 
+plt.scatter(X_test, y_test,  color='gray')
+plt.plot(X_test, y_pred1, color='red', linewidth=2)
 plt.show()
